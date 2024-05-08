@@ -1,0 +1,36 @@
+	#switch 
+enable
+config
+vlan 10
+name Acc
+interface range fastethernet 0/1-2
+switchport access vlan 10
+end
+vlan 20 
+name HR
+interface range fastethernet 0/3-4
+switchport access vlan 20
+exit
+interface fastethernet 0/5
+switchport mode trunk
+
+
+
+
+
+	# router
+enable
+int gig0/0/0
+no shutdown
+int gig 0/0/0.1
+encapsulation dot1q 10
+ip add 192.168.10.1 255.255.255.0
+
+int gig 0/0/0.2
+encapsulation dot1q 20
+ip add 192.168.20.1 255.255.255.0
+
+
+
+
+
