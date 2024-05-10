@@ -1,4 +1,4 @@
-package com.example.MainActivity;
+package com.example.file_share;
 
 import android.os.Bundle;
 import android.os.Handler;
