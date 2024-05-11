@@ -1,6 +1,8 @@
 package com.example.file_share;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -14,8 +16,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -23,6 +28,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         final boolean[] clicked = {false};
         ServerSocket[] serverSocket = {null};
+        Socket[] clientSocket = {null};
         TextView outputTextView = findViewById(R.id.output);
         Button button = findViewById(R.id.button);
 
@@ -58,88 +65,82 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if(!clicked[0]){
                     clicked[0] = true;
-
                     // Start the TCP server in a new thread
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            try {
-                                serverSocket[0] = new ServerSocket(8080); // Replace 8080 with the desired port number
+//                            try {
 
-                                // Get the IP address and port number
-                                String ipAddress = getIpAddress();
-                                int portNumber = serverSocket[0].getLocalPort();
 
-                                // Format the information
-                                String serverInfo = "Server is running at " + ipAddress + ":" + portNumber;
 
-                                mainHandler.post(()->{
-                                    outputTextView.setText("Server is on" + serverInfo);
-                                    button.setText("Stop");
-                                });
 
-                                // Wait for a client to connect
-                                Socket clientSocket = serverSocket[0].accept();
 
-                                // Get the client's IP address
-                                String clientIpAddress = clientSocket.getInetAddress().getHostAddress();
 
-                                // Display the connected client's IP address
-                                mainHandler.post(() -> {
-                                    outputTextView.setText("Connected to client: " + clientIpAddress);
-                                });
 
-                                // Handle communication with the client (e.g., sending and receiving data)
-                                // Get the TextView to display the received data
-                                TextView outputTextView = findViewById(R.id.output);
 
-                                // Get an InputStream from the client socket
-                                InputStream inputStream = clientSocket.getInputStream();
 
-                                // Create a buffer to store the incoming data
-                                byte[] buffer = new byte[1024];
 
-                                // Get the number of files to be received
-                                double numFiles = getNumFiles(clientSocket, outputTextView);
+
+
+
+
+
+//                                serverSocket[0] = new ServerSocket(8080); // Replace 8080 with the desired port number
+//
+//                                // Get the IP address and port number
+//                                String ipAddress = getIpAddress();
+//                                int portNumber = serverSocket[0].getLocalPort();
+//
+//                                // Format the information
+//                                String serverInfo = "Server is running at " + ipAddress + ":" + portNumber;
+//
 //                                mainHandler.post(()->{
-//                                    outputTextView.setText("Number of files to be received: " + numFiles);
+//                                    outputTextView.setText("Server is on" + serverInfo);
+//                                    button.setText("Stop");
 //                                });
-                                        
-
-                                // Continuously read data from the client
-//                                while (true) {
-//                                    // Read data from the InputStream into the buffer
-//                                    int bytesRead = inputStream.read(buffer);
 //
-//                                    // If data was received, process it
-//                                    if (bytesRead > 0) {
-//                                        // Convert the buffer to a string
-//                                        String data = new String(buffer, 0, bytesRead);
+//                                // Wait for a client to connect
+//                                clientSocket[0] = serverSocket[0].accept();
 //
-//                                        // Display the data in the TextView
-//                                        mainHandler.post(() -> {
-//                                            outputTextView.setText(data);
-//                                        });
-//                                    } else {
-//                                        // If the client has closed the connection, break out of the loop
-//                                        break;
-//                                    }
-//                                }
+//                                // Get the client's IP address
+//                                String clientIpAddress = clientSocket[0].getInetAddress().getHostAddress();
+//
+//                                // Display the connected client's IP address
+//                                mainHandler.post(() -> {
+//                                    outputTextView.setText("Connected to client: " + clientIpAddress);
+//                                });
+//
+//                                // Handle communication with the client (e.g., sending and receiving data)
+//
+//
+//                                // Get the number of files to be received
+//                                int numFiles = getNumFiles(clientSocket[0], outputTextView);
+//                                sendAcknowledge(clientSocket[0]);
+////
+////                                while(numFiles > 0){
+////                                    receiveFile(clientSocket[0], outputTextView);
+////                                    numFiles--;
+////                                }
+//                                receiveFile(clientSocket[0], outputTextView);
 
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                mainHandler.post(()->{
-                                    outputTextView.setText(e.getMessage() + " offfff");
-                                });
-                            }
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                                mainHandler.post(()->{
+//                                    outputTextView.append(e.getMessage() + " offfff");
+//                                });
+//                            }
                         }
                     }).start();
+
                 }else{
                     clicked[0] = false;
                     // Stop the TCP server
                     try {
+                        clientSocket[0].close();
                         serverSocket[0].close();
+                        mainHandler.post(()->{
+                            outputTextView.setText("all closed successfully");
+                        });
                     } catch (IOException e) {
                         e.printStackTrace();
                         mainHandler.post(()->{
@@ -179,10 +180,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Get number of files to be received
-    private double getNumFiles(Socket clientSocket, TextView outputTextView) {
+    private int getNumFiles(Socket clientSocket, TextView outputTextView) {
 
         // Specify the number of bytes to receive
-        int numberOfBytesToReceive = 8; // Assuming 4 bytes for an integer
+        int numberOfBytesToReceive = 4; // Assuming 4 bytes for an integer
 
         try {
             // Create a DataInputStream to read binary data from the client
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
             dataInputStream.readFully(receivedData);
 
             // Convert the received bytes to an integer (assuming 4 bytes for an integer)
-            long receivedNumber = ByteBuffer.wrap(receivedData).getLong();
+            int receivedNumber = ByteBuffer.wrap(receivedData).getInt();
 
             // Process received number here
             mainHandler.post(() -> {
@@ -206,43 +207,120 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
             mainHandler.post(() -> {
-                outputTextView.setText(e.getMessage());
+                outputTextView.append(e.getMessage());
             });
             return -1;
         }
-//        try {
-//            // Get an InputStream from the client socket
-//            InputStream inputStream = clientSocket.getInputStream();
+    } // end of getNumFiles function
+    private void receiveFile(Socket clientSocket, TextView outputTextView) throws IOException {
+
+        // Specify the number of bytes to receive ( filesize )
+        int numberOfBytesToReceive = 8;
+        long receivedNumber = 0;
+        long totalBytesReceived = 0;
+
+        try {
+            // Create a DataInputStream to read binary data from the client
+            DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+
+            // Create a byte array to store the received data
+            byte[] receivedData = new byte[numberOfBytesToReceive];
+
+            // Read the specified number of bytes from the stream
+            dataInputStream.readFully(receivedData);
+
+            // Convert the received bytes to an integer (assuming 4 bytes for an integer)
+            receivedNumber = ByteBuffer.wrap(receivedData).getLong();
+
+            // Process received number here
+            long finalReceivedNumber = receivedNumber;
+            mainHandler.post(() -> {
+                outputTextView.append("\nReceived number of bytes to receive: " + finalReceivedNumber);
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            mainHandler.post(() -> {
+                outputTextView.append(e.getMessage());
+            });
+        }
+
+        sendAcknowledge(clientSocket);
+
+        // receive file name
+        try{
+            byte[] fileNameBytes = new byte[1024];
+            int bytesRead = clientSocket.getInputStream().read(fileNameBytes);
+            String fileName = new String(fileNameBytes, 0, bytesRead);
+
+            mainHandler.post(() -> {
+                outputTextView.append("Received file name: " + fileName);
+            });
+
+        }catch (Exception e){
+            e.printStackTrace();
+            mainHandler.post(() -> {
+                outputTextView.append(e.getMessage());
+            });
+        }
+        sendAcknowledge(clientSocket);
+
+
+
+//        while (totalBytesReceived < receivedNumber) {
+//            int chunk = 1024;
+//            byte[] buffer = new byte[chunk];
 //
-//            // Create a buffer to store the incoming data
-//            byte[] buffer = new byte[1024]; // 4 bytes for an integer
-//
-//            // Read data from the InputStream into the buffer
-//            int bytesRead = inputStream.read(buffer);
-//            if (bytesRead > 0) {
-//                // Convert the buffer to a string
-//                String data = new String(buffer, 0, bytesRead);
-////                int number = ByteBuffer.wrap(buffer).getInt();
-//                // Display the data in the TextView
-//                mainHandler.post(() -> {
-//                    outputTextView.setText(buffer.toString());
-//                });
-//
-//            }
-//
-////                // Convert the buffer to an integer
-////                int number = ByteBuffer.wrap(buffer).getInt();
-////
-////                // Display the integer in the TextView
-////                mainHandler.post(() -> {
-////                    outputTextView.setText(String.valueOf(number));
-////                    outputTextView.setText("buffer" + buffer.toString());
-////                });
-//
-//            return 1;
-//        }catch (IOException e) {
-//            e.printStackTrace();
-//            return -1;
 //        }
-    }
+
+
+        // Get the root directory of your app's private internal storage
+        File internalStorageDir = getFilesDir();
+
+// Append the desired directory structure
+        File myAppDataDir = new File(internalStorageDir, "Android/MyAppData");
+
+// Create the directory if it doesn't exist
+        if (!myAppDataDir.exists()) {
+            myAppDataDir.mkdirs(); // Create directories if they don't exist
+        }
+
+// Create a file within the "MyAppData" directory
+        File myFile = new File(myAppDataDir, "example.txt");
+
+        try {
+            // Write data to the file
+            FileOutputStream outputStream = new FileOutputStream(myFile);
+            String fileContents = "Hello, world!";
+            outputStream.write(fileContents.getBytes());
+            outputStream.close();
+            mainHandler.post(() -> {
+                outputTextView.append("File written successfully.");
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+    }// end of receive function
+
+
+    private void sendAcknowledge(Socket clientSocket) throws IOException {
+        try {
+            // Generate 1024 bytes of data
+            byte[] data = new byte[1024];
+            Arrays.fill(data, (byte) 'A'); // Fill with 'A' characters
+
+            // Get the output stream to send data to the client
+            OutputStream outputStream = clientSocket.getOutputStream();
+
+            // Send the data
+            outputStream.write(data);
+            outputStream.flush(); // Flush the output stream
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    } // end of sendAcknowledge function
 }

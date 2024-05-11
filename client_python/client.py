@@ -1,6 +1,8 @@
+import os
 import struct 
 import socket
 import threading
+import time
 import tkinter as tk
 
 
@@ -66,13 +68,26 @@ class Client:
                     # Update button text and label
                     self.button.config(text="Disconnect")
                     self.text_label.config(text=f"Connected to {self.server_ip}:{self.server_port}")
+                    
+                    self.send_num_of_files()
 
-                    self.send_data()
+                    self.recvAcknowledge()
+
+                    
+                    file_path = 'manik.jpg'  
+                    file_size = self.get_file_size(file_path)
+                    print("File size:", file_size, "bytes")
+
+                    self.send_filesize(file_size)
+                    self.recvAcknowledge()
+                    self.send_filename(file_path)
+                    self.recvAcknowledge()
 
                 except Exception as e:
-                    print("An error occurred:", e)
+                    print("Ann error occurred:", e)
                     self.button.config(text="Try again!")
                     self.text_label.config(text=f"Couldn't connected to {self.server_ip}:{self.server_port}")
+                
 
             # Start the connection attempt in a separate thread
             threading.Thread(target=connect, daemon=True).start()
@@ -90,15 +105,54 @@ class Client:
                 print("An error occurred:", e)
 
 
-    def send_data(self):
-        num = 1234567890773748
-        data = num.to_bytes(8, byteorder='big')
+    def send_num_of_files(self):
+        num = 1
+        data = num.to_bytes(4, byteorder='big')
         try:
-            self.client_socket.send(data)
+            
+            num = self.client_socket.send(data)
+        except ConnectionError:
+            print("Connection was lost!")
         except Exception as e:
-            print("An error occurred:", e)
+            print("An error occurredd:", e)
 
+
+    def recvAcknowledge(self):
+        try:
+            data = self.client_socket.recv(1024)
+            if data:
+                print('received ac')
+        except Exception as e:
+            print("An error occurredd:", e)
+
+        
+    def send_filesize(self, file_size):
+
+        file_size = file_size.to_bytes(8, byteorder='big')
+        try:
+            data = self.client_socket.send(file_size)
+        except Exception as e:
+            print("An e1rror occured ", e)
+
+
+    def get_file_size(self, file_path):
+        # Open the file in binary mode
+        with open(file_path, 'rb') as file:
+            # Get the size of the file in bytes
+            file_size = os.path.getsize(file_path)
+        return file_size
+    
+
+    def send_filename(self, file_name):
+        # Encode the filename string into bytes using UTF-8 encoding
+        file_name_bytes = file_name.encode('utf-8')
+        try:
+            self.client_socket.send(file_name_bytes)
+        except Exception as e:
+            print("An e2rror occured ", e)
 
 
 
 client = Client()
+
+
