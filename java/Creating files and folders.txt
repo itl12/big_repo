@@ -1,3 +1,90 @@
+				
+				[   Full file niche daua ase with asking permission   ]
+
+	Creating files in storage/emulated/0/Downloads
+------------------------------------------------------------
+
+
+public void writeFile(){
+
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "/AAAAA/test.txt");
+
+            try
+            {
+                FileWriter writer = new FileWriter(file);
+
+                writer.write("Hello, fucking World!\n");
+
+                writer.close();
+
+                textView.append("File written successfully\n");
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+
+                textView.append("Error\n"+ e.getMessage());
+            }
+    }
+
+
+
+
+		Creating files in storage/emulated/0   [ need WRITE_EXTERNAL_STORAGE permission ] [ build.gradle.kts file e targetSdk=28   (29 er kom)]
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+public void writeFile(){
+        if (isExternalStorageWritable() && checkPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+            // Create a new directory
+            File newDir = new File(Environment.getExternalStorageDirectory() + "/AAAAA");
+            if (!newDir.exists()) {
+                if (newDir.mkdirs()) {
+                    textView.append("Folder created successfully");
+                } else {
+                    textView.append("Failed to create folder");
+                }
+            } else {
+                textView.append("Folder already exists");
+            }
+
+
+
+            // Create a new file
+            File file = new File(Environment.getExternalStorageDirectory(), "/AAAAA/test.txt");
+            try
+            {
+                FileWriter writer = new FileWriter(file);
+
+                writer.write("Hello, fucking World!\n");
+
+                writer.close();
+
+                textView.append("File written successfully\n");
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+
+                textView.append("Error\n"+ e.getMessage());
+            }
+        }else{
+            textView.append("\nExternal storage is not writable \n");
+        }
+    }
+
+
+
+
+
+	=================================   Full File with asking permission    ===========================
+
+
+
+
+
+
 package com.example.file_creating;
 
 
@@ -144,3 +231,4 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
+
