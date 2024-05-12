@@ -75,6 +75,7 @@ class Client:
 
                     
                     file_path = 'manik.jpg'  
+                    # file_path = 'textfile.txt'  
                     file_size = self.get_file_size(file_path)
                     print("File size:", file_size, "bytes")
 
@@ -82,9 +83,12 @@ class Client:
                     self.recvAcknowledge()
                     self.send_filename(file_path)
                     self.recvAcknowledge()
+                    # self.send_text_file_data(file_path)
+                    self.send_binary_file_data(file_path)
+                    self.recvAcknowledge()
 
                 except Exception as e:
-                    print("Ann error occurred:", e)
+                    print("Ann error occurred12:", e)
                     self.button.config(text="Try again!")
                     self.text_label.config(text=f"Couldn't connected to {self.server_ip}:{self.server_port}")
                 
@@ -102,7 +106,7 @@ class Client:
                 self.button.config(text="Connect")
                 self.text_label.config(text="Disconnected")
             except Exception as e:
-                print("An error occurred:", e)
+                print("An error occurred7:", e)
 
 
     def send_num_of_files(self):
@@ -114,7 +118,7 @@ class Client:
         except ConnectionError:
             print("Connection was lost!")
         except Exception as e:
-            print("An error occurredd:", e)
+            print("An error occurredd6:", e)
 
 
     def recvAcknowledge(self):
@@ -123,7 +127,7 @@ class Client:
             if data:
                 print('received ac')
         except Exception as e:
-            print("An error occurredd:", e)
+            print("An error occurredd00:", e)
 
         
     def send_filesize(self, file_size):
@@ -151,6 +155,79 @@ class Client:
         except Exception as e:
             print("An e2rror occured ", e)
 
+
+    def send_file_data(self, file_path):
+        try:
+            # Open the file in binary mode
+            with open(file_path, 'rb') as file:
+                file_size = os.path.getsize(file_path)
+                total_bytes_sent = 0
+                
+                while total_bytes_sent < file_size:
+                    # Read 1024 bytes of data from the file
+                    chunk = file.read(1024)
+                    
+                    # Send the chunk over the socket
+                    self.client_socket.send(chunk)
+                    
+                    # Update the total bytes sent
+                    total_bytes_sent += len(chunk)
+                    
+                    print(f"Sent {total_bytes_sent}/{file_size} bytes")
+                    
+                print("File data sent successfully")
+        except Exception as e:
+            print("An error occurred4:", e)
+
+
+
+    def send_text_file_data(self, file_path):
+        try:
+            # Open the file in text mode
+            with open(file_path, 'r') as file:
+                file_size = os.path.getsize(file_path)
+                total_bytes_sent = 0
+                
+                while total_bytes_sent < file_size:
+                    # Read 1024 bytes of data from the file
+                    chunk = file.read(1024)
+                    
+                    # Send the chunk over the socket
+                    self.client_socket.send(chunk.encode('utf-8'))
+                    
+                    # Update the total bytes sent
+                    total_bytes_sent += len(chunk)
+                    
+                    print(f"Sent {total_bytes_sent}/{file_size} bytes")
+                    
+                print("File data sent successfully")
+        except Exception as e:
+            print("An error occurred5:", e)
+
+            
+    def send_binary_file_data(self, file_path):
+        try:
+            # Open the file in binary mode
+            with open(file_path, 'rb') as file:
+                file_size = os.path.getsize(file_path)
+                total_bytes_sent = 0
+                
+                while total_bytes_sent < file_size:
+                    # Read 1024 bytes of data from the file
+                    chunk = file.read(1024)
+                    
+                    # Send the chunk over the socket
+                    self.client_socket.sendall(chunk)
+                    
+                    # Update the total bytes sent
+                    total_bytes_sent += len(chunk)
+                    
+                    print(f"Sent {total_bytes_sent}/{file_size} bytes")
+                    
+                print("File data sent successfully")
+        except Exception as e:
+            print("An error 9occurred:", e)
+                
 
 
 client = Client()

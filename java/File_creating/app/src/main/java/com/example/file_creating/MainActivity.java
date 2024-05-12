@@ -60,7 +60,9 @@ public class MainActivity extends AppCompatActivity {
                 // Request permission
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_EXTERNAL_STORAGE);
             } else {
-                writeFile();
+//                writeFile();
+                long n = 123456789001234567L;
+                textView.setText(String.valueOf((int)n));
             }
 
 

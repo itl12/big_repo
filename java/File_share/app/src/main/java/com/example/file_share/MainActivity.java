@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,7 +18,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,66 +72,54 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-//                            try {
+                            try {
+
+                                serverSocket[0] = new ServerSocket(8080); // Replace 8080 with the desired port number
+
+                                // Get the IP address and port number
+                                String ipAddress = getIpAddress();
+                                int portNumber = serverSocket[0].getLocalPort();
+
+                                // Format the information
+                                String serverInfo = "Server is running at " + ipAddress + ":" + portNumber;
+
+                                mainHandler.post(()->{
+                                    outputTextView.setText("Server is on" + serverInfo);
+                                    button.setText("Stop");
+                                });
+
+                                // Wait for a client to connect
+                                clientSocket[0] = serverSocket[0].accept();
+
+                                // Get the client's IP address
+                                String clientIpAddress = clientSocket[0].getInetAddress().getHostAddress();
+
+                                // Display the connected client's IP address
+                                mainHandler.post(() -> {
+                                    outputTextView.setText("Connected to client: " + clientIpAddress);
+                                });
+
+                                // Handle communication with the client (e.g., sending and receiving data)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                                serverSocket[0] = new ServerSocket(8080); // Replace 8080 with the desired port number
+                                // Get the number of files to be received
+                                int numFiles = getNumFiles(clientSocket[0], outputTextView);
+                                sendAcknowledge(clientSocket[0]);
 //
-//                                // Get the IP address and port number
-//                                String ipAddress = getIpAddress();
-//                                int portNumber = serverSocket[0].getLocalPort();
-//
-//                                // Format the information
-//                                String serverInfo = "Server is running at " + ipAddress + ":" + portNumber;
-//
-//                                mainHandler.post(()->{
-//                                    outputTextView.setText("Server is on" + serverInfo);
-//                                    button.setText("Stop");
-//                                });
-//
-//                                // Wait for a client to connect
-//                                clientSocket[0] = serverSocket[0].accept();
-//
-//                                // Get the client's IP address
-//                                String clientIpAddress = clientSocket[0].getInetAddress().getHostAddress();
-//
-//                                // Display the connected client's IP address
-//                                mainHandler.post(() -> {
-//                                    outputTextView.setText("Connected to client: " + clientIpAddress);
-//                                });
-//
-//                                // Handle communication with the client (e.g., sending and receiving data)
-//
-//
-//                                // Get the number of files to be received
-//                                int numFiles = getNumFiles(clientSocket[0], outputTextView);
-//                                sendAcknowledge(clientSocket[0]);
-////
-////                                while(numFiles > 0){
-////                                    receiveFile(clientSocket[0], outputTextView);
-////                                    numFiles--;
-////                                }
-//                                receiveFile(clientSocket[0], outputTextView);
+//                                while(numFiles > 0){
+//                                    receiveFile(clientSocket[0], outputTextView);
+//                                    numFiles--;
+//                                }
 
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                                mainHandler.post(()->{
-//                                    outputTextView.append(e.getMessage() + " offfff");
-//                                });
-//                            }
+
+                                receiveFile(clientSocket[0], outputTextView);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                mainHandler.post(()->{
+                                    outputTextView.append(e.getMessage() + " offfff");
+                                });
+                            }
                         }
                     }).start();
 
@@ -212,11 +203,11 @@ public class MainActivity extends AppCompatActivity {
             return -1;
         }
     } // end of getNumFiles function
-    private void receiveFile(Socket clientSocket, TextView outputTextView) throws IOException {
+    private void receiveFile(Socket clientSocket, TextView outputTextView){
 
         // Specify the number of bytes to receive ( filesize )
-        int numberOfBytesToReceive = 8;
-        long receivedNumber = 0;
+        int numberOfBytesToReceive = 8; // this 8 byte received data will contain the filesize
+        long filesize = 0;
         long totalBytesReceived = 0;
 
         try {
@@ -230,10 +221,10 @@ public class MainActivity extends AppCompatActivity {
             dataInputStream.readFully(receivedData);
 
             // Convert the received bytes to an integer (assuming 4 bytes for an integer)
-            receivedNumber = ByteBuffer.wrap(receivedData).getLong();
+            filesize = ByteBuffer.wrap(receivedData).getLong();
 
             // Process received number here
-            long finalReceivedNumber = receivedNumber;
+            long finalReceivedNumber = filesize;
             mainHandler.post(() -> {
                 outputTextView.append("\nReceived number of bytes to receive: " + finalReceivedNumber);
             });
@@ -248,13 +239,15 @@ public class MainActivity extends AppCompatActivity {
         sendAcknowledge(clientSocket);
 
         // receive file name
+        String fileName = "";
         try{
             byte[] fileNameBytes = new byte[1024];
             int bytesRead = clientSocket.getInputStream().read(fileNameBytes);
-            String fileName = new String(fileNameBytes, 0, bytesRead);
+            fileName = new String(fileNameBytes, 0, bytesRead);
 
+            String finalFileName = fileName;
             mainHandler.post(() -> {
-                outputTextView.append("Received file name: " + fileName);
+                outputTextView.append("Received file name: " + finalFileName);
             });
 
         }catch (Exception e){
@@ -265,41 +258,16 @@ public class MainActivity extends AppCompatActivity {
         }
         sendAcknowledge(clientSocket);
 
-
-
-//        while (totalBytesReceived < receivedNumber) {
-//            int chunk = 1024;
-//            byte[] buffer = new byte[chunk];
-//
-//        }
-
-
-        // Get the root directory of your app's private internal storage
-        File internalStorageDir = getFilesDir();
-
-// Append the desired directory structure
-        File myAppDataDir = new File(internalStorageDir, "Android/MyAppData");
-
-// Create the directory if it doesn't exist
-        if (!myAppDataDir.exists()) {
-            myAppDataDir.mkdirs(); // Create directories if they don't exist
+        if(fileName.contains(".txt")){
+            receiveTextFile(clientSocket, outputTextView, fileName, filesize);
+        }else{
+            receiveBinaryFile(clientSocket, outputTextView, fileName, filesize);
         }
 
-// Create a file within the "MyAppData" directory
-        File myFile = new File(myAppDataDir, "example.txt");
+        sendAcknowledge(clientSocket);
+        // Creating file with file name
 
-        try {
-            // Write data to the file
-            FileOutputStream outputStream = new FileOutputStream(myFile);
-            String fileContents = "Hello, world!";
-            outputStream.write(fileContents.getBytes());
-            outputStream.close();
-            mainHandler.post(() -> {
-                outputTextView.append("File written successfully.");
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
 
 
@@ -307,7 +275,88 @@ public class MainActivity extends AppCompatActivity {
     }// end of receive function
 
 
-    private void sendAcknowledge(Socket clientSocket) throws IOException {
+
+    //  Receive Text file
+    private void receiveTextFile(Socket clientSocket, TextView outputTextView,String filename, long filesize){
+
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+        if (file.exists()) {
+            file.delete();
+        }
+
+        long totalBytesReceived = 0;
+
+        try{
+            FileOutputStream outputStream = new FileOutputStream(file, true);
+
+            while (totalBytesReceived < filesize) {
+                try{
+                    int chunk = 1024;
+                    byte[] buffer = new byte[chunk];
+                    int bytesRead = clientSocket.getInputStream().read(buffer);
+                    outputStream.write(buffer, 0,  bytesRead);
+                    totalBytesReceived += bytesRead;
+                }catch (Exception e ){
+                    e.printStackTrace();
+                    mainHandler.post(() -> {
+                        outputTextView.append(e.getMessage());
+                    });
+                    break;
+                }
+            }
+            outputStream.close();
+        }catch (Exception e){
+            e.printStackTrace();
+            mainHandler.post(() -> {
+                outputTextView.append(e.getMessage());
+            });
+        }
+
+    }
+
+
+
+    //  Receive Binary file
+    private void receiveBinaryFile(Socket clientSocket, TextView outputTextView,String filename, long filesize){
+
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+        if (file.exists()) {
+            file.delete();
+        }
+
+        long totalBytesReceived = 0;
+
+        try{
+            FileOutputStream outputStream = new FileOutputStream(file, true);
+
+            while (totalBytesReceived < filesize) {
+                try{
+                    int chunk = 1024;
+                    byte[] buffer = new byte[chunk];
+                    int bytesRead = clientSocket.getInputStream().read(buffer);
+                    outputStream.write(buffer, 0,  bytesRead);
+                    totalBytesReceived += bytesRead;
+                }catch (Exception e ){
+                    e.printStackTrace();
+                    mainHandler.post(() -> {
+                        outputTextView.append(e.getMessage());
+                    });
+                    break;
+                }
+            }
+            outputStream.close();
+        }catch (Exception e){
+            e.printStackTrace();
+            mainHandler.post(() -> {
+                outputTextView.append(e.getMessage());
+            });
+        }
+
+    }
+
+
+
+    private void sendAcknowledge(Socket clientSocket){
         try {
             // Generate 1024 bytes of data
             byte[] data = new byte[1024];
