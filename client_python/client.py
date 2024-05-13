@@ -74,7 +74,7 @@ class Client:
                     self.recvAcknowledge()
 
                     
-                    file_path = 'manik.jpg'  
+                    file_path = 'movie.mkv'  
                     # file_path = 'textfile.txt'  
                     file_size = self.get_file_size(file_path)
                     print("File size:", file_size, "bytes")
@@ -222,7 +222,7 @@ class Client:
                     # Update the total bytes sent
                     total_bytes_sent += len(chunk)
                     
-                    print(f"Sent {total_bytes_sent}/{file_size} bytes")
+                    # print(f"Sent {total_bytes_sent}/{file_size} bytes")
                     
                 print("File data sent successfully")
         except Exception as e:
