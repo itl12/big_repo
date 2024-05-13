@@ -1,5 +1,4 @@
 import os
-import struct 
 import socket
 import threading
 import time
