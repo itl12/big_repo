@@ -91,6 +91,9 @@ public class MainActivity extends AppCompatActivity {
                                 // Wait for a client to connect
                                 clientSocket[0] = serverSocket[0].accept();
 
+                                if(clientSocket[0] != null)
+                                    serverSocket[0].close();
+
                                 // Get the client's IP address
                                 String clientIpAddress = clientSocket[0].getInetAddress().getHostAddress();
 
@@ -127,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                     clicked[0] = false;
                     // Stop the TCP server
                     try {
-                        clientSocket[0].close();
+
                         serverSocket[0].close();
                         mainHandler.post(()->{
                             outputTextView.setText("all closed successfully");

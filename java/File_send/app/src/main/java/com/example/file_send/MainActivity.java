@@ -1,11 +1,11 @@
 package com.example.file_send;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,8 +18,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(Looper.getMainLooper());
         button = findViewById(R.id.button);
         textView = findViewById(R.id.textView);
+        String path;
         button.setOnClickListener(v -> openFilePicker());
 
         // Initialize the file picker launcher
@@ -63,6 +71,24 @@ public class MainActivity extends AppCompatActivity {
                     // Display the path(s) in the TextView
                     for (Uri uri : uris) {
                         textView.setText(uri.toString() + "\n");
+                        ContentResolver contentResolver = getContentResolver();
+
+                        try {
+                            InputStream inputStream = contentResolver.openInputStream(uri);
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            File file = new File(uri.getPath());
+                            String fileName = file.getName();
+                            System.out.println("File Name: " + fileName);
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                // Process the line of text
+                                System.out.println(line);
+                            }
+                        } catch (FileNotFoundException e) {
+                            // Handle the exception
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             } else {
