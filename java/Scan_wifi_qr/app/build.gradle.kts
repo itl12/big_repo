@@ -8,8 +8,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.scan_wifi_qr"
-        minSdk = 34
-        targetSdk = 34
+        minSdk = 31
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
 
@@ -37,4 +37,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    // added by me
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.4.1")
+    implementation("androidx.activity:activity:1.3.0")
+    implementation("androidx.appcompat:appcompat:1.3.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
+
 }
