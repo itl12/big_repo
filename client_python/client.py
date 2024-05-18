@@ -77,6 +77,7 @@ class Client:
                     # file_path = 'textfile.txt'  
                     file_size = self.get_file_size(file_path)
                     print("File size:", file_size, "bytes")
+                    
 
                     self.send_filesize(file_size)
                     self.recvAcknowledge()
