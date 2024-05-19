@@ -2,12 +2,12 @@ package com.example.scan_wifi_qr;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
-import android.net.NetworkRequest;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
     private Button button;
     private TextView textView;
     private WifiManager wifiManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private ConnectivityManager connectivityManager;
 
     private final ActivityResultLauncher<String[]> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -31,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
                 Boolean locationPermission = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
                 if (cameraPermission != null && cameraPermission && locationPermission != null && locationPermission) {
                     startQrCodeScanner();
-
                 } else {
                     textView.setText("Permissions are required to scan QR codes and connect to Wi-Fi.");
                 }
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         button = findViewById(R.id.button);
         textView = findViewById(R.id.textView);
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
         button.setOnClickListener(v -> checkPermissionsAndStartScanner());
 
@@ -120,21 +122,35 @@ public class MainActivity extends AppCompatActivity {
                         .setNetworkSpecifier(wifiNetworkSpecifier)
                         .build();
 
-        ConnectivityManager connectivityManager =
-                (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-
-        connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
+        networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
                 super.onAvailable(network);
-                textView.setText("Connected to Wi-Fi: " + ssid);
+                connectivityManager.bindProcessToNetwork(network);
+                runOnUiThread(() -> textView.setText("Connected to Wi-Fi: " + ssid));
             }
 
             @Override
             public void onUnavailable() {
                 super.onUnavailable();
-                textView.setText("Failed to connect to Wi-Fi: " + ssid);
+                runOnUiThread(() -> textView.setText("Failed to connect to Wi-Fi: " + ssid));
             }
-        });
+
+            @Override
+            public void onLost(@NonNull Network network) {
+                super.onLost(network);
+                runOnUiThread(() -> textView.setText("Lost connection to Wi-Fi: " + ssid));
+            }
+        };
+
+        connectivityManager.requestNetwork(networkRequest, networkCallback);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connectivityManager != null && networkCallback != null) {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
     }
 }
