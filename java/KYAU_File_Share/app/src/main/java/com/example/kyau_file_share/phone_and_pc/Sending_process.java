@@ -12,8 +12,11 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.kyau_file_share.R;
 import com.example.kyau_file_share.Singleton;
 
+import java.net.Socket;
+
 public class Sending_process extends AppCompatActivity {
 
+    private Socket socket;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,7 +27,7 @@ public class Sending_process extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-
+        // variables initialization
+        socket = Singleton.socket;
     }
 }

@@ -33,7 +33,6 @@ public class Send_file extends AppCompatActivity {
 
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,10 +61,12 @@ public class Send_file extends AppCompatActivity {
         });
 
 
+
     } // onCreate
 
 
     // Functions definition
+
 
     private void startAutoConnect() {
         button5.setText("Connecting...");
@@ -78,18 +79,18 @@ public class Send_file extends AppCompatActivity {
         Thread thread = new Thread(() -> {
             String ip = getIpAddress();
             Singleton.ip = ip;
-            String strippedIp = ip.substring(0, ip.lastIndexOf(".") +1);
+            String strippedIp = ip.substring(0, ip.lastIndexOf(".") + 1);
             for (int i = 1; i < 255; i++) {
                 try {
-                    if(button7.getText() == "Connect")
+                    if (button7.getText() == "Connect")
                         break;
                     String newIp = strippedIp + i;
                     System.out.println(i + " " + newIp);
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(newIp, 8000), 50);
-                    if(socket.isConnected())
-                    {
-                        showToast("Connected to " + newIp);break;
+                    if (socket.isConnected()) {
+                        showToast("Connected to " + newIp);
+                        break;
                     }
                 } catch (Exception e) {
 //                    e.printStackTrace();
@@ -97,15 +98,12 @@ public class Send_file extends AppCompatActivity {
             }
             if (!socket.isConnected()) {
                 showToast("Couldn't connect to any device.");
-                runOnUiThread(()-> resetAllButton());
-            }else{
+                runOnUiThread(() -> resetAllButton());
+            } else {
                 Singleton.socket = socket;
-                Intent intent = new Intent(Send_file.this, Sending_process.class);
-                startActivity(intent);
             }
         });
         thread.start();
-
 
     } // startAutoConnect
 
@@ -118,6 +116,46 @@ public class Send_file extends AppCompatActivity {
             button7.setText("Connect");
             button6.setText("Scan QR Code");
             button5.setText("Auto Connect");
+        }else if(button7.getText() == "Connecting..."){
+            resetAllButton();
+        }
+        else{
+            if ( !ipInput.getText().toString().isEmpty())
+            {
+                button5.setEnabled(false);
+                button6.setEnabled(false);
+                ipInput.setEnabled(false);
+                button7.setText("Connecting...");
+
+                // TODO: Connect
+                Thread thread = new Thread(() -> {
+                    String ip = getIpAddress();
+                    Singleton.ip = ip;
+                    String strippedIp = ip.substring(0, ip.lastIndexOf(".") + 1);
+
+                    while (button7.getText() == "Connecting...") {
+                        try{
+                            socket = new Socket();
+                            socket.connect(new InetSocketAddress(strippedIp + ipInput.getText().toString(), 8000), 100);
+                        }catch(Exception e){
+//                            e.printStackTrace();
+                        }
+                    }
+                    if (socket.isConnected()) {
+                        showToast("Connected to " + ipInput.getText().toString());
+                        Singleton.socket = socket;
+                        runOnUiThread(() -> resetAllButton());
+                        Intent intent = new Intent(Send_file.this, Sending_process.class);
+                        startActivity(intent);
+                    } else {
+                        showToast("Couldn't connect to " + ipInput.getText().toString());
+                        runOnUiThread(() -> resetAllButton());
+                    }
+                });
+                thread.start();
+            }else{
+                showToast("Please enter code first");
+            }
         }
     }
 
