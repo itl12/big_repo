@@ -12,8 +12,8 @@ class Client:
     def __init__(self):
 
         self.connected = False
-        self.server_ip = '192.168.0.106'
-        self.server_port = 8080
+        self.server_ip = '192.168.0.108'
+        self.server_port = 9999
         # self.server_ip = 'localhost'
         # self.server_port = 9999
 

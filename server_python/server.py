@@ -4,7 +4,7 @@ import socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Bind the socket to the address and port
-server_address = ('localhost', 9999)
+server_address = ('192.168.0.108', 8000)
 server_socket.bind(server_address)
 
 # Listen for incoming connections
@@ -20,11 +20,10 @@ while True:
         print("Connection from:", client_address)
 
         # Receive the integer value from the client
-        data = client_socket.recv(12)  # Assuming the integer is of 4 bytes size
-        received_number = int.from_bytes(data, byteorder='big')
+        # data = client_socket.recv(12)  # Assuming the integer is of 4 bytes size
+        # received_number = int.from_bytes(data, byteorder='big')
 
-        print("Received number:", received_number)
-
-    finally:
-        # Clean up the connection
-        client_socket.close()
+        # print("Received number:", received_number)
+        # client_socket.close()
+    except Exception as e:
+        print(e)

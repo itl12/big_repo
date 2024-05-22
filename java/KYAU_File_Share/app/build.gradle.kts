@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.auto_connect"
+    namespace = "com.example.kyau_file_share"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.auto_connect"
+        applicationId = "com.example.kyau_file_share"
         minSdk = 31
-        targetSdk = 31
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
