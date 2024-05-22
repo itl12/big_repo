@@ -31,7 +31,21 @@ public class Send_file extends AppCompatActivity {
     private EditText ipInput;
     private Socket socket;
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
 
+//        try{
+//            Singleton.socket.close();
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }
+        button5.setEnabled(true);
+        button6.setEnabled(true);
+        button7.setText("Connect");
+        button5.setText("Auto Connect");
+        ipInput.setEnabled(true);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +80,6 @@ public class Send_file extends AppCompatActivity {
 
 
     // Functions definition
-
 
     private void startAutoConnect() {
         button5.setText("Connecting...");
@@ -140,11 +153,12 @@ public class Send_file extends AppCompatActivity {
                         }catch(Exception e){
 //                            e.printStackTrace();
                         }
+                        if (socket.isConnected())
+                            break;
                     }
                     if (socket.isConnected()) {
                         showToast("Connected to " + ipInput.getText().toString());
                         Singleton.socket = socket;
-                        runOnUiThread(() -> resetAllButton());
                         Intent intent = new Intent(Send_file.this, Sending_process.class);
                         startActivity(intent);
                     } else {
