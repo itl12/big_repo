@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -30,6 +31,9 @@ public class Send_file extends AppCompatActivity {
     private Button button7;
     private EditText ipInput;
     private Socket socket;
+
+
+
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -57,6 +61,10 @@ public class Send_file extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+
+
 
         button5 = findViewById(R.id.button5);
         button6 = findViewById(R.id.button6);
@@ -157,10 +165,18 @@ public class Send_file extends AppCompatActivity {
                             break;
                     }
                     if (socket.isConnected()) {
-                        showToast("Connected to " + ipInput.getText().toString());
+                        showToast("Connected");
                         Singleton.socket = socket;
+//                        runOnUiThread(() -> resetAllButton());
                         Intent intent = new Intent(Send_file.this, Sending_process.class);
                         startActivity(intent);
+                        try {
+                            Thread.sleep(2000);
+                            runOnUiThread(() -> resetAllButton());
+                        } catch (InterruptedException e) {
+//                            throw new RuntimeException(e);
+                            e.printStackTrace();
+                        }
                     } else {
                         showToast("Couldn't connect to " + ipInput.getText().toString());
                         runOnUiThread(() -> resetAllButton());

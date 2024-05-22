@@ -42,17 +42,11 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        Thread thread = new Thread(()->{
-            try {
-                Singleton.socket = new Socket("192.168.0.108", 8080);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        });
-        thread.start();
 
 
+        // Extra stuff
         Intent intent = new Intent(this, Send_file.class);
         startActivity(intent);
-    }
+
+    } // onCreate
 }
