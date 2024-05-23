@@ -3,7 +3,10 @@ package com.example.kyau_file_share.phone_and_pc;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +32,7 @@ public class Sending_process extends AppCompatActivity {
     private Button button8;
     private Button button9;
     private TextView output;
+    private ScrollView scrollView;
     private ActivityResultLauncher<Intent> filePickerLauncher;
     private List<Uri> uris;
 
@@ -62,7 +66,27 @@ public class Sending_process extends AppCompatActivity {
         button8 = findViewById(R.id.button8);
         button9 = findViewById(R.id.button9);
         output = findViewById(R.id.output);
+        scrollView = findViewById(R.id.scrollView);
         uris = new ArrayList<>();
+
+        // Set a listener to check the height of the TextView
+        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
+            @Override
+            public void onGlobalLayout() {
+                int[] scrolViewLocation = new int[2];
+                int[] button8Location = new int[2];
+                scrollView.getLocationOnScreen(scrolViewLocation);
+                button8.getLocationOnScreen(button8Location);
+                int distance = button8Location[1] - scrolViewLocation[1];
+                ViewGroup.LayoutParams layoutParams = scrollView.getLayoutParams();
+                layoutParams.height = distance - 40;
+                scrollView.setLayoutParams(layoutParams);
+                scrollView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+
+
+
         filePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
                 if (result.getData() != null) {

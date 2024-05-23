@@ -32,13 +32,9 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="8dp"
+        android:id="@+id/scrollView"
+        android:layout_marginTop="52dp"
         android:padding="?attr/listPreferredItemPaddingRight"
-        app:layout_constraintBottom_toTopOf="@+id/button8"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/progressBar">
 
         <LinearLayout
@@ -49,8 +45,7 @@
             <TextView
                 android:id="@+id/output"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TextView" />
+                android:layout_height="wrap_content"/>
         </LinearLayout>
     </ScrollView>
 
