@@ -24,7 +24,11 @@ import com.example.kyau_file_share.Singleton;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 public class Sending_process extends AppCompatActivity {
 
@@ -35,6 +39,9 @@ public class Sending_process extends AppCompatActivity {
     private ScrollView scrollView;
     private ActivityResultLauncher<Intent> filePickerLauncher;
     private List<Uri> uris;
+    private Queue<Uri> fileQueue = new LinkedList<>();
+    private Set<Uri> fileSet = new HashSet<>();
+    private boolean is_sending = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,13 +102,17 @@ public class Sending_process extends AppCompatActivity {
                     if (result.getData().getClipData() != null) {
                         int count = result.getData().getClipData().getItemCount();
                         for (int i = 0; i < count; i++) {
-                            uris.add(result.getData().getClipData().getItemAt(i).getUri());
+                            if(fileSet.add(result.getData().getClipData().getItemAt(i).getUri())){
+                                fileQueue.add(result.getData().getClipData().getItemAt(i).getUri());
+                            };
                         }
                     } else if (result.getData().getData() != null) {
-                        uris.add(result.getData().getData());
+                        if(fileSet.add(result.getData().getData())){
+                            fileQueue.add(result.getData().getData());
+                        }
                     }
-                    for(Uri uri:uris)
-                        output.append(uri.toString()+" \n");
+
+                    processQueue();
                 }else{
                     Toast.makeText(Sending_process.this, "No file selected", Toast.LENGTH_SHORT).show();
                 }
@@ -120,7 +131,27 @@ public class Sending_process extends AppCompatActivity {
     } // onCreate
 
 
+
+
     // Functions initialization
+
+    private void processQueue() {
+        if(is_sending) return;
+        if(fileQueue.isEmpty()) {
+            Toast.makeText(this, "All Files Send.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        is_sending = true;
+        Uri fileUri = fileQueue.poll();
+        sendFile(fileUri);
+    }
+
+    private void sendFile(Uri uri){
+        output.append("Sending file: " + uri.toString() + " \n");
+        is_sending = false;
+        processQueue();
+    }
+
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
