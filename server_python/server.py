@@ -1,29 +1,45 @@
 import socket
 
-# Create a TCP/IP socket
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class Server:
+    def __init__(self, address, port):
+        self.server_address = (address, port)
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind(self.server_address)
+        self.server_socket.listen(1)
+        print("Server initialized on address:", self.server_address)
 
-# Bind the socket to the address and port
-server_address = ('192.168.0.108', 8000)
-server_socket.bind(server_address)
-
-# Listen for incoming connections
-server_socket.listen(1)
-
-print("Waiting for a connection...")
-
-while True:
-    # Wait for a connection
-    client_socket, client_address = server_socket.accept()
-
-    try:
+    def wait_for_connection(self):
+        print("Waiting for a connection...")
+        client_socket, client_address = self.server_socket.accept()
         print("Connection from:", client_address)
+        return client_socket, client_address
 
-        # Receive the integer value from the client
-        # data = client_socket.recv(12)  # Assuming the integer is of 4 bytes size
-        # received_number = int.from_bytes(data, byteorder='big')
+    def close(self):
+        self.server_socket.close()
+        print("Server socket closed.")
 
-        # print("Received number:", received_number)
-        # client_socket.close()
-    except Exception as e:
-        print(e)
+
+    def sendAck(self):
+        try:
+            data = 'A' * 1024
+            client_socket.send()
+        except Exception as e:
+            print("An error occurredd00:", e)
+
+    def recvAck(self):
+        try:
+            data = self.client_socket.recv(1024)
+            if data:
+                print('received ac')
+        except Exception as e:
+            print("An error occurredd00:", e)
+
+    def recvFile(self):
+        self.recvAck()
+
+# Usage
+if __name__ == "__main__":
+    server = Server('192.168.0.108', 8000)
+    client_socket, client_address = server.wait_for_connection()
+    # Perform operations with client_socket here
+    server.recvFile()

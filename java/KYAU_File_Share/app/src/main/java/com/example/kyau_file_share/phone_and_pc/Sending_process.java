@@ -1,5 +1,6 @@
 package com.example.kyau_file_share.phone_and_pc;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,8 +23,14 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.kyau_file_share.R;
 import com.example.kyau_file_share.Singleton;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -149,8 +156,47 @@ public class Sending_process extends AppCompatActivity {
     private void sendFile(Uri uri){
         output.append("Sending file: " + uri.toString() + " \n");
         is_sending = false;
-        processQueue();
+        Thread thread = new Thread(() -> {
+            sendAck();
+            sendFileName(uri);
+
+
+            processQueue();
+        });
+        thread.start();
     }
+
+    private void sendFileName(Uri uri){
+        ContentResolver contentResolver = getContentResolver();
+        try{
+            InputStream inputStream = contentResolver.openInputStream(uri);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            File file = new File(uri.getPath());
+            String fileName = file.getName();
+            output.append("Sending file name: " + fileName + " \n");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void sendAck(){
+        try {
+            // Generate 1024 bytes of data
+            byte[] data = new byte[1024];
+            Arrays.fill(data, (byte) 'A'); // Fill with 'A' characters
+
+            // Get the output stream to send data to the client
+            OutputStream outputStream = socket.getOutputStream();
+
+            // Send the data
+            outputStream.write(data);
+            outputStream.flush(); // Flush the output stream
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
 
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
