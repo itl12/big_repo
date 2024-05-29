@@ -28,6 +28,8 @@ import com.example.kyau_file_share.Singleton;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -191,22 +193,63 @@ public class Sending_process extends AppCompatActivity {
         }
     }
 
-    private void sendFileData(Uri uri){
-        try{
+    private void sendFileData(Uri uri) {
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        try {
             ContentResolver contentResolver = getContentResolver();
-            InputStream inputStream = contentResolver.openInputStream(uri);
-            byte[] buffer = new byte[1024];
+            inputStream = contentResolver.openInputStream(uri);
+
+            long totalSend = 0;
+            byte[] buffer;
             int bytesRead;
-            OutputStream outputStream = socket.getOutputStream();
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream = socket.getOutputStream();
+
+            while (totalSend < fileSize) {
+                long remaining = fileSize - totalSend;
+                long chunkSize = remaining < 1024 ? remaining : 1024;
+                buffer = new byte[(int) chunkSize];
+
+                bytesRead = inputStream.read(buffer);
+                if (bytesRead == -1) {
+                    break; // end of stream
+                }
+
                 outputStream.write(buffer, 0, bytesRead);
                 outputStream.flush();
+                totalSend += bytesRead;
             }
-            runOnUiThread(()->{output.append("\n file send!\n ");});
-        }catch (Exception e){
+
+            runOnUiThread(() -> {
+                output.append("\n file sent!\n ");
+            });
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            runOnUiThread(() -> {
+                output.append("\n File not found: " + e.getMessage() + "\n ");
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            runOnUiThread(() -> {
+                output.append("\n IO error: " + e.getMessage() + "\n ");
+            });
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
+                runOnUiThread(() -> {
+                    output.append("\n Error closing stream: " + e.getMessage() + "\n ");
+                });
+            }
         }
     }
+
 
     private void sendFile(Uri uri){
         runOnUiThread(()->{output.append("Sending file: " + uri.toString() + " \n");});

@@ -67,18 +67,32 @@ class Server:
         try:
             totalRecv = 0
             if self.file_name.endswith('.txt'):
-                with open(self.file_name, 'a') as file:
+                with open(self.file_name, 'w') as file:
                     while totalRecv < self.file_size:
                         left = self.file_size - totalRecv
                         chunkSize = left if left < 1024 else 1024
-                        chunk = self.client_socket.recv( chunkSize ).decode()
+                        chunk = self.client_socket.recv(chunkSize).decode()
+                        if not chunk:
+                            break  # socket closed or error
                         file.write(chunk)
-                        totalRecv += chunkSize
-                file.close()
-                print("Receive completed.")
-
+                        totalRecv += len(chunk)
+                print("Text file receive completed.")
+            else:
+                with open(self.file_name, 'wb') as file:
+                    while totalRecv < self.file_size:
+                        left = self.file_size - totalRecv
+                        chunkSize = left if left < 1024 else 1024
+                        chunk = self.client_socket.recv(chunkSize)
+                        if not chunk:
+                            break  # socket closed or error
+                        file.write(chunk)
+                        totalRecv += len(chunk)
+                print("Binary file receive completed.")
         except Exception as e:
-            print("Err " , e)
+            print("Error:", e)
+            import traceback
+            traceback.print_exc()
+
 
 
     #!!!! Main function
