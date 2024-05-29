@@ -223,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
             // Read the specified number of bytes from the stream
             dataInputStream.readFully(receivedData);
 
-            // Convert the received bytes to an integer (assuming 4 bytes for an integer)
             filesize = ByteBuffer.wrap(receivedData).getLong();
 
             // Process received number here

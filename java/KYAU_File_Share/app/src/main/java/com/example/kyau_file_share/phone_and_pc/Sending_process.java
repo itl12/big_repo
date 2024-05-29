@@ -2,8 +2,10 @@ package com.example.kyau_file_share.phone_and_pc;
 
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
@@ -19,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.example.kyau_file_share.R;
 import com.example.kyau_file_share.Singleton;
@@ -29,6 +32,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -49,6 +55,7 @@ public class Sending_process extends AppCompatActivity {
     private Queue<Uri> fileQueue = new LinkedList<>();
     private Set<Uri> fileSet = new HashSet<>();
     private boolean is_sending = false;
+    private long fileSize;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,7 +152,7 @@ public class Sending_process extends AppCompatActivity {
     private void processQueue() {
         if(is_sending) return;
         if(fileQueue.isEmpty()) {
-            Toast.makeText(this, "All Files Send.", Toast.LENGTH_SHORT).show();
+            runOnUiThread(()->{Toast.makeText(this, "All Files Send.", Toast.LENGTH_SHORT).show();});
             return;
         }
         is_sending = true;
@@ -153,12 +160,62 @@ public class Sending_process extends AppCompatActivity {
         sendFile(fileUri);
     }
 
+    private void sendFilesize(Uri uri){
+        ContentResolver contentResolver = getContentResolver();
+        try{
+            // Get file size
+            String[] projection = { OpenableColumns.SIZE };
+            Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+            fileSize = -1;
+            if (cursor != null) {
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                if (cursor.moveToFirst()) {
+                    fileSize = cursor.getInt(sizeIndex);
+                }
+                cursor.close();
+            }
+
+            long finalFileSize = fileSize;
+            runOnUiThread(()->{output.append("Sending file size: " + finalFileSize + " ");});
+
+            ByteBuffer buffer = ByteBuffer.allocate(8); // 4 bytes for int
+            buffer.putLong(fileSize);
+            OutputStream outputStream = socket.getOutputStream();
+
+
+            outputStream.write(buffer.array());
+            outputStream.flush();
+            runOnUiThread(()-> { output.append("done1 "); });
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void sendFileData(Uri uri){
+        try{
+            ContentResolver contentResolver = getContentResolver();
+            InputStream inputStream = contentResolver.openInputStream(uri);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            OutputStream outputStream = socket.getOutputStream();
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+                outputStream.flush();
+            }
+            runOnUiThread(()->{output.append("\n file send!\n ");});
+        }catch (Exception e){
+                e.printStackTrace();
+        }
+    }
+
     private void sendFile(Uri uri){
-        output.append("Sending file: " + uri.toString() + " \n");
+        runOnUiThread(()->{output.append("Sending file: " + uri.toString() + " \n");});
         is_sending = false;
         Thread thread = new Thread(() -> {
             sendAck();
             sendFileName(uri);
+            sendFilesize(uri);
+            sendFileData(uri);
 
 
             processQueue();
@@ -167,15 +224,31 @@ public class Sending_process extends AppCompatActivity {
     }
 
     private void sendFileName(Uri uri){
+
+
         ContentResolver contentResolver = getContentResolver();
         try{
+
             InputStream inputStream = contentResolver.openInputStream(uri);
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            File file = new File(uri.getPath());
-            String fileName = file.getName();
-            output.append("Sending file name: " + fileName + " \n");
+            String fileName;
+
+            DocumentFile documentFile = DocumentFile.fromSingleUri(this.getApplicationContext(), uri);
+            if (documentFile != null && documentFile.exists()) {
+                fileName = documentFile.getName();
+            } else {
+                fileName = "";
+            }
+
+            runOnUiThread(()->{output.append("Sending file name: " + fileName + " \n");});
+            OutputStream outputStream = socket.getOutputStream();
+            outputStream.write(fileName.getBytes().length);  // 1 bytes for filename
+            outputStream.write(fileName.getBytes());
+            outputStream.flush();
+
         }catch (Exception e){
             e.printStackTrace();
+            runOnUiThread(()->{output.append("Error: " + e.getMessage() + " \n");});
         }
     }
 
@@ -191,6 +264,21 @@ public class Sending_process extends AppCompatActivity {
             // Send the data
             outputStream.write(data);
             outputStream.flush(); // Flush the output stream
+            runOnUiThread(()->{output.append("done0\n");});
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void recvAck(){
+        try {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            InputStream inputStream = socket.getInputStream();
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                String receivedData = new String(buffer, 0, bytesRead, StandardCharsets.UTF_16);
+            }
+            runOnUiThread(()->{output.append("Received ack: \n");});
         }catch (Exception e){
             e.printStackTrace();
         }
