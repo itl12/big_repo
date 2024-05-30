@@ -27,7 +27,6 @@ import com.example.kyau_file_share.R;
 import com.example.kyau_file_share.Singleton;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +34,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,13 +72,16 @@ public class Sending_process extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 // Handle the back button event here
-               try{
-                   Singleton.socket.close();
-               }catch(Exception e){}
+                try {
+                    Singleton.socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 finish();
-               if(Singleton.socket!=null)
-                   Toast.makeText(Sending_process.this, "Disconnected", Toast.LENGTH_SHORT).show();
+                if (Singleton.socket != null) {
+                    Toast.makeText(Sending_process.this, "Disconnected", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -93,14 +94,14 @@ public class Sending_process extends AppCompatActivity {
         uris = new ArrayList<>();
 
         // Set a listener to check the height of the TextView
-        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener(){
+        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                int[] scrolViewLocation = new int[2];
+                int[] scrollViewLocation = new int[2];
                 int[] button8Location = new int[2];
-                scrollView.getLocationOnScreen(scrolViewLocation);
+                scrollView.getLocationOnScreen(scrollViewLocation);
                 button8.getLocationOnScreen(button8Location);
-                int distance = button8Location[1] - scrolViewLocation[1];
+                int distance = button8Location[1] - scrollViewLocation[1];
                 ViewGroup.LayoutParams layoutParams = scrollView.getLayoutParams();
                 layoutParams.height = distance - 40;
                 scrollView.setLayoutParams(layoutParams);
@@ -108,53 +109,40 @@ public class Sending_process extends AppCompatActivity {
             }
         });
 
-
-
         filePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
                 if (result.getData() != null) {
                     // Get the URI(s) of the selected file(s)
-//                    uris = new ArrayList<>();
                     if (result.getData().getClipData() != null) {
                         int count = result.getData().getClipData().getItemCount();
                         for (int i = 0; i < count; i++) {
-                            if(fileSet.add(result.getData().getClipData().getItemAt(i).getUri())){
+                            if (fileSet.add(result.getData().getClipData().getItemAt(i).getUri())) {
                                 fileQueue.add(result.getData().getClipData().getItemAt(i).getUri());
-                            };
+                            }
                         }
                     } else if (result.getData().getData() != null) {
-                        if(fileSet.add(result.getData().getData())){
+                        if (fileSet.add(result.getData().getData())) {
                             fileQueue.add(result.getData().getData());
                         }
                     }
 
                     processQueue();
-                }else{
+                } else {
                     Toast.makeText(Sending_process.this, "No file selected", Toast.LENGTH_SHORT).show();
                 }
             }
 
         });
 
+        button8.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        button8.setOnClickListener(v -> {
-            getOnBackPressedDispatcher().onBackPressed();
-        });
-
-        button9.setOnClickListener(v -> {
-            openFilePicker();
-        });
-    } // onCreate
-
-
-
-
-    // Functions initialization
+        button9.setOnClickListener(v -> openFilePicker());
+    }
 
     private void processQueue() {
-        if(is_sending) return;
-        if(fileQueue.isEmpty()) {
-            runOnUiThread(()->{Toast.makeText(this, "All Files Send.", Toast.LENGTH_SHORT).show();});
+        if (is_sending) return;
+        if (fileQueue.isEmpty()) {
+            runOnUiThread(() -> Toast.makeText(this, "All Files Sent.", Toast.LENGTH_SHORT).show());
             return;
         }
         is_sending = true;
@@ -162,9 +150,9 @@ public class Sending_process extends AppCompatActivity {
         sendFile(fileUri);
     }
 
-    private void sendFilesize(Uri uri){
+    private void sendFilesize(Uri uri) {
         ContentResolver contentResolver = getContentResolver();
-        try{
+        try {
             // Get file size
             String[] projection = { OpenableColumns.SIZE };
             Cursor cursor = contentResolver.query(uri, projection, null, null, null);
@@ -178,24 +166,21 @@ public class Sending_process extends AppCompatActivity {
             }
 
             long finalFileSize = fileSize;
-            runOnUiThread(()->{output.append("Sending file size: " + finalFileSize + " ");});
+            runOnUiThread(() -> output.append("Sending file size: " + finalFileSize + " "));
 
-            ByteBuffer buffer = ByteBuffer.allocate(8); // 4 bytes for int
+            ByteBuffer buffer = ByteBuffer.allocate(8);
             buffer.putLong(fileSize);
             OutputStream outputStream = socket.getOutputStream();
-
-
             outputStream.write(buffer.array());
             outputStream.flush();
-            runOnUiThread(()-> { output.append("done1 "); });
-        }catch (Exception e){
+            runOnUiThread(() -> output.append("done\n"));
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void sendFileData(Uri uri) {
         InputStream inputStream = null;
-        OutputStream outputStream = null;
         try {
             ContentResolver contentResolver = getContentResolver();
             inputStream = contentResolver.openInputStream(uri);
@@ -203,7 +188,7 @@ public class Sending_process extends AppCompatActivity {
             long totalSend = 0;
             byte[] buffer;
             int bytesRead;
-            outputStream = socket.getOutputStream();
+            OutputStream outputStream = socket.getOutputStream();
 
             while (totalSend < fileSize) {
                 long remaining = fileSize - totalSend;
@@ -212,7 +197,7 @@ public class Sending_process extends AppCompatActivity {
 
                 bytesRead = inputStream.read(buffer);
                 if (bytesRead == -1) {
-                    break; // end of stream
+                    break;
                 }
 
                 outputStream.write(buffer, 0, bytesRead);
@@ -220,114 +205,84 @@ public class Sending_process extends AppCompatActivity {
                 totalSend += bytesRead;
             }
 
-            runOnUiThread(() -> {
-                output.append("\n file sent!\n ");
-            });
+            runOnUiThread(() -> output.append("\nFile sent!\n"));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            runOnUiThread(() -> {
-                output.append("\n File not found: " + e.getMessage() + "\n ");
-            });
+            runOnUiThread(() -> output.append("\nFile not found: " + e.getMessage() + "\n"));
         } catch (IOException e) {
             e.printStackTrace();
-            runOnUiThread(() -> {
-                output.append("\n IO error: " + e.getMessage() + "\n ");
-            });
+            runOnUiThread(() -> output.append("\nIO error: " + e.getMessage() + "\n"));
         } finally {
             try {
                 if (inputStream != null) {
                     inputStream.close();
                 }
-                if (outputStream != null) {
-                    outputStream.close();
-                }
             } catch (IOException e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    output.append("\n Error closing stream: " + e.getMessage() + "\n ");
-                });
+                runOnUiThread(() -> output.append("\nError closing stream: " + e.getMessage() + "\n"));
             }
         }
     }
 
-
-    private void sendFile(Uri uri){
-        runOnUiThread(()->{output.append("Sending file: " + uri.toString() + " \n");});
+    private void sendFile(Uri uri) {
+        runOnUiThread(() -> output.append("Sending file: " + uri.toString() + " \n"));
         Thread thread = new Thread(() -> {
             sendAck();
             sendFileName(uri);
             sendFilesize(uri);
             sendFileData(uri);
+            recvAck();
 
             is_sending = false;
-
             processQueue();
         });
         thread.start();
     }
 
-    private void sendFileName(Uri uri){
-
-
+    private void sendFileName(Uri uri) {
         ContentResolver contentResolver = getContentResolver();
-        try{
-
-            InputStream inputStream = contentResolver.openInputStream(uri);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String fileName;
-
-            DocumentFile documentFile = DocumentFile.fromSingleUri(this.getApplicationContext(), uri);
-            if (documentFile != null && documentFile.exists()) {
-                fileName = documentFile.getName();
-            } else {
-                fileName = "";
-            }
-
-            runOnUiThread(()->{output.append("Sending file name: " + fileName + " \n");});
-            OutputStream outputStream = socket.getOutputStream();
-            outputStream.write(fileName.getBytes().length);  // 1 bytes for filename
-            outputStream.write(fileName.getBytes());
-            outputStream.flush();
-
-        }catch (Exception e){
-            e.printStackTrace();
-            runOnUiThread(()->{output.append("Error: " + e.getMessage() + " \n");});
-        }
-    }
-
-    private void sendAck(){
         try {
-            // Generate 1024 bytes of data
-            byte[] data = new byte[1024];
-            Arrays.fill(data, (byte) 'A'); // Fill with 'A' characters
+            DocumentFile documentFile = DocumentFile.fromSingleUri(this.getApplicationContext(), uri);
+            String fileName = (documentFile != null && documentFile.exists()) ? documentFile.getName() : "";
 
-            // Get the output stream to send data to the client
+            runOnUiThread(() -> output.append("Sending file name: " + fileName + " \n"));
             OutputStream outputStream = socket.getOutputStream();
+            byte[] fileNameBytes = fileName.getBytes();
+            outputStream.write(fileNameBytes.length);  // 1 byte for filename length
+            outputStream.write(fileNameBytes);
+            outputStream.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            runOnUiThread(() -> output.append("Error: " + e.getMessage() + " \n"));
+        }
+    }
 
-            // Send the data
+    private void sendAck() {
+        try {
+            byte[] data = new byte[1024];
+            Arrays.fill(data, (byte) 'A');
+            OutputStream outputStream = socket.getOutputStream();
             outputStream.write(data);
-            outputStream.flush(); // Flush the output stream
-            runOnUiThread(()->{output.append("done0\n");});
-        }catch (Exception e){
+            outputStream.flush();
+            runOnUiThread(() -> output.append("Ack sent\n"));
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void recvAck(){
+    private void recvAck() {
         try {
             byte[] buffer = new byte[1024];
-            int bytesRead;
             InputStream inputStream = socket.getInputStream();
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
+            int bytesRead = inputStream.read(buffer);
+            if (bytesRead != -1) {
                 String receivedData = new String(buffer, 0, bytesRead, StandardCharsets.UTF_16);
+                runOnUiThread(() -> output.append("Received ack: " + "\n"));
             }
-            runOnUiThread(()->{output.append("Received ack: \n");});
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
 
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);

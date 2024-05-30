@@ -20,7 +20,7 @@ class Server:
     def wait_for_connection(self):
         print("Waiting for a connection...")
         self.client_socket, self.client_address = self.server_socket.accept()
-        print("Connection from:", self.client_address)
+        print("Connection from:", self.client_address , "\n")
         return self.client_socket, self.client_address
 
     def close(self):
@@ -47,7 +47,7 @@ class Server:
         try:
             size = self.client_socket.recv(1)[0]
             self.file_name = self.client_socket.recv(size).decode()
-            print(f"Received file name: {self.file_name}\n")
+            print(f"Received file name: {self.file_name}")
             return self.file_name
         except Exception as e:
             print("An error occurred while receiving the filename:", e)
@@ -67,7 +67,7 @@ class Server:
         try:
             totalRecv = 0
             if self.file_name.endswith('.txt'):
-                with open(self.file_name, 'w') as file:
+                with open("files/"+self.file_name, 'w') as file:
                     while totalRecv < self.file_size:
                         left = self.file_size - totalRecv
                         chunkSize = left if left < 1024 else 1024
@@ -76,9 +76,9 @@ class Server:
                             break  # socket closed or error
                         file.write(chunk)
                         totalRecv += len(chunk)
-                print("Text file receive completed.")
+                print("Text file receive completed.\n")
             else:
-                with open(self.file_name, 'wb') as file:
+                with open("files/"+self.file_name, 'wb') as file:
                     while totalRecv < self.file_size:
                         left = self.file_size - totalRecv
                         chunkSize = left if left < 1024 else 1024
@@ -87,7 +87,7 @@ class Server:
                             break  # socket closed or error
                         file.write(chunk)
                         totalRecv += len(chunk)
-                print("Binary file receive completed.")
+                print("Binary file receive completed.\n")
         except Exception as e:
             print("Error:", e)
             import traceback
@@ -97,8 +97,8 @@ class Server:
 
     #!!!! Main function
     def recvFile(self):
-        self.recvAck()
         while True:
+            self.recvAck()
             file_name = self.recvFileName()
             if not file_name:
                 break
