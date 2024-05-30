@@ -253,13 +253,13 @@ public class Sending_process extends AppCompatActivity {
 
     private void sendFile(Uri uri){
         runOnUiThread(()->{output.append("Sending file: " + uri.toString() + " \n");});
-        is_sending = false;
         Thread thread = new Thread(() -> {
             sendAck();
             sendFileName(uri);
             sendFilesize(uri);
             sendFileData(uri);
 
+            is_sending = false;
 
             processQueue();
         });

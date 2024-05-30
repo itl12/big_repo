@@ -98,9 +98,13 @@ class Server:
     #!!!! Main function
     def recvFile(self):
         self.recvAck()
-        self.recvFileName()
-        self.recvFilesize()
-        self.recvFileData()
+        while True:
+            file_name = self.recvFileName()
+            if not file_name:
+                break
+            self.recvFilesize()
+            self.recvFileData()
+            self.sendAck()
 
 # Usage
 if __name__ == "__main__":
