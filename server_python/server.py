@@ -70,7 +70,7 @@ class Server:
                 with open("files/"+self.file_name, 'w') as file:
                     while totalRecv < self.file_size:
                         left = self.file_size - totalRecv
-                        chunkSize = left if left < 1024 else 1024
+                        chunkSize = left if left < 1024000 else 1024000
                         chunk = self.client_socket.recv(chunkSize).decode()
                         if not chunk:
                             break  # socket closed or error
@@ -81,7 +81,7 @@ class Server:
                 with open("files/"+self.file_name, 'wb') as file:
                     while totalRecv < self.file_size:
                         left = self.file_size - totalRecv
-                        chunkSize = left if left < 1024 else 1024
+                        chunkSize = left if left < 1024000 else 1024000
                         chunk = self.client_socket.recv(chunkSize)
                         if not chunk:
                             break  # socket closed or error
@@ -98,7 +98,7 @@ class Server:
     #!!!! Main function
     def recvFile(self):
         while True:
-            self.recvAck()
+            self.sendAck()
             file_name = self.recvFileName()
             if not file_name:
                 break

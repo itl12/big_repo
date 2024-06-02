@@ -1,2 +1,1 @@
-client_socket = None
-    # client_address = None
+1024000

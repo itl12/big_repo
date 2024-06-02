@@ -117,6 +117,23 @@ public class Send_file extends AppCompatActivity {
 //                    e.printStackTrace();
                 }
             }
+            if (socket.isConnected()) {
+                showToast("Connected");
+                Singleton.socket = socket;
+//                        runOnUiThread(() -> resetAllButton());
+                Intent intent = new Intent(Send_file.this, Sending_process.class);
+                startActivity(intent);
+                try {
+                    Thread.sleep(2000);
+                    runOnUiThread(() -> resetAllButton());
+                } catch (InterruptedException e) {
+//                            throw new RuntimeException(e);
+                    e.printStackTrace();
+                }
+            } else {
+                showToast("Couldn't connect to " + ipInput.getText().toString());
+                runOnUiThread(() -> resetAllButton());
+            }
             if (!socket.isConnected()) {
                 showToast("Couldn't connect to any device.");
                 runOnUiThread(() -> resetAllButton());
