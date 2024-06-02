@@ -118,7 +118,7 @@ public class Send_file extends AppCompatActivity {
                 }
             }
             if (socket.isConnected()) {
-                showToast("Connected");
+//                showToast("Connected");
                 Singleton.socket = socket;
 //                        runOnUiThread(() -> resetAllButton());
                 Intent intent = new Intent(Send_file.this, Sending_process.class);
@@ -131,14 +131,8 @@ public class Send_file extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                showToast("Couldn't connect to " + ipInput.getText().toString());
-                runOnUiThread(() -> resetAllButton());
-            }
-            if (!socket.isConnected()) {
                 showToast("Couldn't connect to any device.");
                 runOnUiThread(() -> resetAllButton());
-            } else {
-                Singleton.socket = socket;
             }
         });
         thread.start();
