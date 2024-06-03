@@ -11,6 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.kyau_file_share.phone_and_pc.PhoneAndComputerHome;
+import com.example.kyau_file_share.phone_and_pc.Receive_file;
 import com.example.kyau_file_share.phone_and_pc.Send_file;
 import com.example.kyau_file_share.phone_and_pc.Sending_process;
 
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Extra stuff
-        Intent intent = new Intent(this, Send_file.class);
+        Intent intent = new Intent(this, Receive_file.class);
         startActivity(intent);
 
     } // onCreate

@@ -211,7 +211,7 @@ public class Send_file extends AppCompatActivity {
 
 
     // Get local ip Address
-    private String getIpAddress() {
+    public static String getIpAddress() {
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
             while (networkInterfaces.hasMoreElements()) {

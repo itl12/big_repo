@@ -37,6 +37,11 @@ public class PhoneAndComputerHome extends AppCompatActivity {
 
         });
 
+        button4.setOnClickListener(v -> {
+            Intent intent = new Intent(this, Receive_file.class);
+            startActivity(intent);
+        });
+
 
     }
 }
