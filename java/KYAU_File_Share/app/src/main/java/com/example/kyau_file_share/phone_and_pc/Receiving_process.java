@@ -44,7 +44,7 @@ public class Receiving_process extends AppCompatActivity {
     private Socket socket;
     private String filename;
     private long filesize;
-
+    private int fileCount = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +109,7 @@ public class Receiving_process extends AppCompatActivity {
                 result = recvFiledata();    if(result == -1){return;}
 
             }
+            appendTextToTextView("All files received.\n", Color.GRAY, 18);
         });
         thread.start();
 
@@ -127,16 +128,27 @@ public class Receiving_process extends AppCompatActivity {
             InputStream inputStream = socket.getInputStream();
 
             // Create a FileOutputStream to save the received file
-            FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
 
             // Read data from the input stream and write to file
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024000];
             int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
+            long total = 0;
+            long left = filesize-total;
+            while (left > 0 ) {
+                bytesRead = inputStream.read(buffer);
+                if (bytesRead == -1) {
+                    break;
+                }
+                total += bytesRead;
+                left -= bytesRead;
                 fileOutputStream.write(buffer, 0, bytesRead);
+                int progress = (int) (total * 100 / filesize);
+                runOnUiThread(() -> progressBar.setProgress(progress));
             }
 
-            appendTextToTextView("File received successfully.");
+//            appendTextToTextView("File received successfully.");
+            appendTextToTextView("Receive success!\n", Color.GRAY, 18);
         }catch (Exception e){
             e.printStackTrace();
             appendTextToTextView(e.toString() , Color.RED, 20);
@@ -151,8 +163,9 @@ public class Receiving_process extends AppCompatActivity {
 
             // Read the file size (8 bytes, unsigned long)
             filesize = dataInputStream.readLong();  // Read 8 bytes as a long integer
+            runOnUiThread(()->{ progressBar.setMax( 100 );});
 
-            appendTextToTextView("Received filesize: " + filesize);
+//            appendTextToTextView("Received filesize: " + filesize);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -176,7 +189,9 @@ public class Receiving_process extends AppCompatActivity {
             // Convert the byte array to a string
             filename = new String(filenameBytes);
 
-            appendTextToTextView("Received filename:" + filename);
+//            appendTextToTextView("Received filename:" + filename);
+            appendTextToTextView(fileCount + ". " + filename + " is now receiving.", Color.BLUE, 18);
+            fileCount++;
 
         } catch (IOException e) {
             e.printStackTrace();
