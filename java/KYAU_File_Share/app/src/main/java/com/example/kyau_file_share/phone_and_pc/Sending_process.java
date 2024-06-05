@@ -220,6 +220,33 @@ public class Sending_process extends AppCompatActivity {
         }
     }
 
+
+
+    private void sendFile(Uri uri) {
+//        runOnUiThread(() -> output.append("Sending file: " + uri.toString() + " \n"));
+        Thread thread = new Thread(() -> {
+            int result = 0;
+            result = recvAck();
+            if(result == -1) return;
+
+            result = sendFileName(uri);
+            if(result == -1) return;
+
+            result = sendFilesize(uri);
+            if(result == -1) return;
+
+            result = sendFileData(uri);
+            if(result == -1) return;
+
+            result = recvAck();
+            if(result == -1) return;
+
+            is_sending = false;
+            processQueue();
+        });
+        thread.start();
+    }
+
     private int sendFileData(Uri uri) {
         InputStream inputStream = null;
         try {
@@ -308,31 +335,6 @@ public class Sending_process extends AppCompatActivity {
                 return -1;
             }
         }
-    }
-
-    private void sendFile(Uri uri) {
-//        runOnUiThread(() -> output.append("Sending file: " + uri.toString() + " \n"));
-        Thread thread = new Thread(() -> {
-            int result = 0;
-            result = recvAck();
-            if(result == -1) return;
-
-            result = sendFileName(uri);
-            if(result == -1) return;
-
-            result = sendFilesize(uri);
-            if(result == -1) return;
-
-            result = sendFileData(uri);
-            if(result == -1) return;
-
-            result = recvAck();
-            if(result == -1) return;
-
-            is_sending = false;
-            processQueue();
-        });
-        thread.start();
     }
 
     private int sendFileName(Uri uri) {
