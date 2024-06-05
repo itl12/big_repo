@@ -26,6 +26,7 @@ public class Receive_file extends AppCompatActivity {
     private Button button10;
     private Button button11;
     private TextView textView3;
+    private TextView textView5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +43,13 @@ public class Receive_file extends AppCompatActivity {
         button10 = findViewById(R.id.button10);
         button11 = findViewById(R.id.button11);
         textView3 = findViewById(R.id.textView3);
+        textView5 = findViewById(R.id.textView5);
+
+        Thread thread1 = new Thread(()->{
+           String ip = Send_file.getIpAddress();
+           textView5.setText(ip);
+        });
+        thread1.start();
 
 
         button10.setOnClickListener(v -> {
