@@ -1,7 +1,9 @@
 package com.example.kyau_file_share;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button button;
     private Button button2;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,18 +39,23 @@ public class MainActivity extends AppCompatActivity {
         button = findViewById(R.id.button);
         button2 = findViewById(R.id.button2);
 
-
         button2.setOnClickListener(v -> {
             Intent intent = new Intent(this, PhoneAndComputerHome.class);
             startActivity(intent);
-
         });
 
+        // Acquire wake lock
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag");
+        wakeLock.acquire();
+    }
 
-
-        // Extra stuff
-        Intent intent = new Intent(this, Receive_file.class);
-        startActivity(intent);
-
-    } // onCreate
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Release wake lock to avoid battery drain
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+    }
 }
