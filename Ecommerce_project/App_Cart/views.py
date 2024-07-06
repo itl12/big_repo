@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Cart
@@ -31,3 +32,34 @@ def cart(request):
         return redirect('/')
     
 
+@login_required
+def remove_from_cart(request, pk):
+    cart = get_object_or_404(Cart, pk=pk, user=request.user, purchased=False)
+    cart.delete()
+    messages.success(request, 'Removed item!')
+    return redirect('App_Cart:cart')
+
+
+@login_required
+def decrease_item(request, pk):
+    cart = Cart.objects.filter(pk=pk, user=request.user, purchased=False)
+    if cart:
+        cart = cart[0]
+        if cart.quantity > 1:
+            cart.quantity -= 1
+            cart.save()
+            messages.success(request, 'Item quantity updated!')
+            return redirect('App_Cart:cart')
+        else:
+            return redirect(reverse('App_Cart:remove_from_cart', kwargs={'pk':cart.pk}))
+        
+
+@login_required
+def increase_item(request, pk):
+    cart = Cart.objects.filter(pk=pk, user=request.user, purchased=False)
+    if cart:
+        cart = cart[0]
+        cart.quantity += 1
+        cart.save()
+        messages.success(request, 'Item quantity updated!')
+        return redirect('App_Cart:cart')

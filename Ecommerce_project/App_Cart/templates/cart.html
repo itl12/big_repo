@@ -19,10 +19,14 @@
                 {% for cart in carts %}
                 <tr>
                     <th>{{ forloop.counter }}</th>
-                    <td>{{ cart.item.name }}</td>
-                    <td>{{ cart.quantity }}</td>
-                    <td>{{ cart.get_total|floatformat:2 }}</td>
-                    <td><a href="" class="btn btn-danger">Remove from cart</a></td>
+                    <td class="text-nowrap"><a href="{% url 'App_Shop:product_detail' pk=cart.item.pk %}">{{ cart.item.name|truncatechars:40 }}</a></td>
+                    <td class="text-nowrap">
+                        <a href="{% url 'App_Cart:decrease_item' pk=cart.pk %}"><span class="text-decoration-none fw-bold badge text-bg-secondary border">-</span></a>
+                            &nbsp;&nbsp;{{ cart.quantity }}&nbsp;&nbsp;
+                        <a href="{% url 'App_Cart:increase_item' pk=cart.pk %}"><span class="text-decoration-none fw-bold badge text-bg-secondary border">+</span></a>
+                    </td>
+                    <td>&#2547;{{ cart.get_total|floatformat:2 }}</td>
+                    <td><a href="{% url 'App_Cart:remove_from_cart' pk=cart.pk %}" class="btn btn-danger text-nowrap" >Remove from cart</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -31,7 +35,7 @@
                     <th></th>
                     <th></th>
                     <th>Total</th>
-                    <th>3200</th>
+                    <th>&#2547;3200</th>
                 </tr>
             </tfoot>
         </table>
