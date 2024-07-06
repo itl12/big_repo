@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+
+<div class="row mt-5 gy-3">
+    {% for item in items %}
+    <div class="col-md-4">
+        <div class="card" >
+            <img src="{{ item.image.url }}" class="card-img-top" style="height: 250px; width: auto; object-fit: contain;" alt="{{ item.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ item.name }}</h5>
+                <p class="card-text"><strong>$ {{ item.price }}&nbsp;&nbsp; $<strike>{{ item.old_price }}</strike></strong></p>
+                <a href="{% url 'App_Shop:product_detail' pk=item.pk %}" class="btn btn-primary">View details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

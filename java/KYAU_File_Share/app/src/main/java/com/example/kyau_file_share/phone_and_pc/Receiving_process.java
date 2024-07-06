@@ -1,8 +1,12 @@
 package com.example.kyau_file_share.phone_and_pc;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.text.SpannableString;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
@@ -45,6 +49,8 @@ public class Receiving_process extends AppCompatActivity {
     private String filename;
     private long filesize;
     private int fileCount = 1;
+    private PowerManager.WakeLock wakeLock;
+    private WifiManager.WifiLock wifiLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +69,16 @@ public class Receiving_process extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar2);
         socket = Singleton.socket;
 
+
+        // Acquire wake lock
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::FileTransferWakeLock");
+        wakeLock.acquire(30*60*1000L /*10 minutes*/);
+
+        // Acquire wifi lock
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MyApp::FileTransferWifiLock");
+        wifiLock.acquire();
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -114,9 +130,25 @@ public class Receiving_process extends AppCompatActivity {
         thread.start();
 
 
+        Intent serviceIntent = new Intent(this, FileTransferService.class);
+        startForegroundService(serviceIntent);
 
     }// onCreate
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseLocks();
+    }
+
+    private void releaseLocks() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+        if (wifiLock != null && wifiLock.isHeld()) {
+            wifiLock.release();
+        }
+    }
 
     private int recvFiledata() {
         try {

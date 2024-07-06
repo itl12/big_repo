@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+
+<div class="container my-5">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cart in carts %}
+                <tr>
+                    <th>{{ forloop.counter }}</th>
+                    <td>{{ cart.item.name }}</td>
+                    <td>{{ cart.quantity }}</td>
+                    <td>{{ cart.get_total|floatformat:2 }}</td>
+                    <td><a href="" class="btn btn-danger">Remove from cart</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th>Total</th>
+                    <th>3200</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

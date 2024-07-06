@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+
+<div class="row mt-5 gy-3">
+    <div class="col-md-6">
+        <img src="{{ product.image.url }}" style="height:400px; object-fit: contain;" alt="">
+    </div>
+    <div class="col-md-6">
+        <a href="{% url 'App_Cart:add_item' pk=product.pk %}" class="btn btn-warning">Add to cart</a>
+    </div>
+</div>
+
+{% endblock %}
