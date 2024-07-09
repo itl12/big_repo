@@ -73,6 +73,16 @@ class Profile(models.Model):
     country = models.CharField(max_length=50, blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
+    # check if all fields are filled
+    def is_fully_filled(self):
+        fields_names = [f.name for f in self._meta.get_fields()]
+        for field_name in fields_names:
+            value = getattr(self, field_name)
+            if value is None or value == '':
+                return False
+        return True                                                                                                                            
+
+
     def __str__(self):
         return self.user.email 
     

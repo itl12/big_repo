@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'App_Login',
     'App_Shop',
     'App_Cart',
+    'App_Payment',
     "crispy_forms",
     "crispy_bootstrap5",
 
@@ -78,6 +79,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.tz',
+                # add context_processors
+                'Ecommerce_project.context_processors.item_count',
             ],
         },
     },
