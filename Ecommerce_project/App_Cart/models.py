@@ -13,8 +13,7 @@ class Cart(models.Model):
     purchased = models.BooleanField(default=False)
 
     def get_total(self):
-        total = Decimal(self.item.price) * self.quantity
-        return total.quantize(Decimal('0.01'))
+        return self.item.price * self.quantity
 
     
     def __str__(self):
@@ -28,9 +27,12 @@ class Order(models.Model):
 
     def get_totals(self):
         total = 0
-        for cart in self.orderItems:
-            total += cart.get_total
-        return (Decimal(total).quantize(Decimal(0.01)))
-
+        # for cart in self.orderItems.all():
+        #     total += cart.get_total()
+        # return (Decimal(total).quantize(Decimal(0.01)))
+        for cart in self.orderItems.all():
+            total += cart.get_total()
+        return total
+    
     def __str__(self):
         return f'{self.user} ordered-->> {self.ordered}'

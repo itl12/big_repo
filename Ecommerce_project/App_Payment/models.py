@@ -22,7 +22,13 @@ class BillingAddress(models.Model):
         return True       
     
     def __str__(self):
-        return f"{self.user.profile.username}'s billing address."
+        return f"{self.user.profile.user}'s billing address."
     
     class Meta:
         verbose_name_plural = "Billing Addresses"
+
+
+class Payment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='payment', on_delete=models.CASCADE)
+    tran_id = models.CharField(max_length=200)
+    val_id = models.CharField(max_length=200)
